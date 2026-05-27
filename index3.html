@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Apple Box">
+<title>Apple Box</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    background: #000;
+    min-height: 100vh;
+    color: #f2f2f7;
+  }
+
+  .page { display: none; min-height: 100vh; flex-direction: column; }
+  .page.active { display: flex; }
+
+  /* Main Page */
+  #main {
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 40px 28px;
+    background: #000;
+  }
+
+  .app-title {
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #f2f2f7;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .app-subtitle {
+    font-size: 18px;
+    color: #636366;
+    margin-bottom: 36px;
+    text-align: center;
+  }
+
+  .main-btn {
+    width: 100%;
+    max-width: 340px;
+    padding: 22px 26px;
+    border-radius: 16px;
+    border: none;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: transform 0.1s, opacity 0.1s;
+    font-family: inherit;
+  }
+
+  .main-btn:active { transform: scale(0.97); opacity: 0.8; }
+
+  .main-btn.primary {
+    background: #f2f2f7;
+    color: #000;
+  }
+
+  .main-btn.secondary {
+    background: #1c1c1e;
+    color: #f2f2f7;
+    border: 1px solid #3a3a3c;
+  }
+
+  .btn-arrow { font-size: 22px; opacity: 0.4; }
+
+  /* Nav bar */
+  .nav-bar {
+    background: rgba(0,0,0,0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 18px 20px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 0.5px solid #2c2c2e;
+  }
+
+  .back-btn {
+    background: none;
+    border: none;
+    font-size: 19px;
+    color: #0a84ff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 0;
+    font-family: inherit;
+  }
+
+  .nav-title {
+    font-size: 19px;
+    font-weight: 600;
+    flex: 1;
+    text-align: center;
+    color: #f2f2f7;
+  }
+
+  .nav-spacer { width: 60px; }
+
+  /* A1 Page */
+  #a1 { background: #000; }
+
+  .section-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #636366;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 22px 20px 8px;
+  }
+
+  .options-list {
+    background: #1c1c1e;
+    margin: 0 16px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .option-row {
+    display: flex;
+    align-items: center;
+    padding: 17px 16px;
+    border-bottom: 0.5px solid #2c2c2e;
+    cursor: pointer;
+    transition: background 0.1s;
+    user-select: none;
+  }
+
+  .option-row:last-child { border-bottom: none; }
+  .option-row:active { background: #2c2c2e; }
+
+  /* Radio button style */
+  .option-radio {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid #48484a;
+    margin-right: 14px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    background: transparent;
+  }
+
+  .option-row.selected .option-radio {
+    border-color: #0a84ff;
+    background: transparent;
+  }
+
+  .option-row.selected .option-radio::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #0a84ff;
+    display: block;
+  }
+
+  .option-label { font-size: 19px; color: #f2f2f7; }
+
+  .next-btn {
+    margin: 28px 16px;
+    width: calc(100% - 32px);
+    padding: 18px;
+    background: #0a84ff;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 19px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.1s, transform 0.1s;
+    font-family: inherit;
+  }
+
+  .next-btn:disabled {
+    background: #2c2c2e;
+    color: #48484a;
+    cursor: default;
+  }
+
+  .next-btn:not(:disabled):active { transform: scale(0.98); opacity: 0.8; }
+
+  /* A2 Page */
+  #a2 { background: #000; }
+
+  .name-section { padding: 24px 16px; }
+
+  .name-card {
+    background: #1c1c1e;
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .name-label {
+    font-size: 14px;
+    color: #636366;
+    margin-bottom: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .name-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 24px;
+    font-weight: 500;
+    color: #f2f2f7;
+    font-family: inherit;
+    background: transparent;
+    caret-color: #0a84ff;
+  }
+
+  .name-input::placeholder { color: #48484a; }
+
+  .summary-section { padding: 0 16px 24px; }
+
+  .summary-card {
+    background: #1c1c1e;
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+
+  .summary-title {
+    font-size: 14px;
+    color: #636366;
+    margin-bottom: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .summary-item {
+    font-size: 17px;
+    color: #f2f2f7;
+    padding: 7px 0;
+    border-bottom: 0.5px solid #2c2c2e;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .summary-item:last-child { border-bottom: none; }
+
+  .summary-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #0a84ff;
+    flex-shrink: 0;
+  }
+
+  .confirm-btn {
+    margin: 0 16px 48px;
+    width: calc(100% - 32px);
+    padding: 18px;
+    background: #30d158;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 19px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.1s, transform 0.1s;
+  }
+
+  .confirm-btn:active { transform: scale(0.98); opacity: 0.8; }
+
+  /* Success overlay */
+  .success-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+  }
+
+  .success-overlay.show { display: flex; }
+
+  .success-card {
+    background: #1c1c1e;
+    border-radius: 20px;
+    padding: 36px 28px;
+    text-align: center;
+    width: 100%;
+    max-width: 340px;
+    border: 1px solid #2c2c2e;
+  }
+
+  .success-icon {
+    width: 70px; height: 70px;
+    background: #30d158;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+    font-size: 30px;
+  }
+
+  .success-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #f2f2f7; }
+  .success-name { font-size: 18px; color: #636366; margin-bottom: 28px; }
+
+  .success-ok {
+    width: 100%;
+    padding: 16px;
+    background: #0a84ff;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 19px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+</style>
+</head>
+<body>
+
+<!-- MAIN PAGE -->
+<div id="main" class="page active">
+  <div>
+    <div class="app-title">📦 Apple Box</div>
+    <div class="app-subtitle">What would you like to do?</div>
+  </div>
+  <button class="main-btn primary" onclick="goTo('a1')">
+    Apple Box
+    <span class="btn-arrow">›</span>
+  </button>
+  <button class="main-btn secondary" onclick="alert('Orders coming soon!')">
+    Orders
+    <span class="btn-arrow">›</span>
+  </button>
+</div>
+
+<!-- A1: SELECT BOX TYPE -->
+<div id="a1" class="page">
+  <div class="nav-bar">
+    <button class="back-btn" onclick="goTo('main')">‹ Back</button>
+    <span class="nav-title">Choose Box</span>
+    <span class="nav-spacer"></span>
+  </div>
+
+  <div class="section-label">Photoma Box</div>
+  <div class="options-list">
+    <div class="option-row" onclick="selectOption(this, '3 Photoma Box')">
+      <div class="option-radio"></div>
+      <span class="option-label">3 Photoma Box</span>
+    </div>
+    <div class="option-row" onclick="selectOption(this, '2 Photoma Box')">
+      <div class="option-radio"></div>
+      <span class="option-label">2 Photoma Box</span>
+    </div>
+    <div class="option-row" onclick="selectOption(this, '1 Photoma Box')">
+      <div class="option-radio"></div>
+      <span class="option-label">1 Photoma Box</span>
+    </div>
+  </div>
+
+  <div class="section-label">Mini Box</div>
+  <div class="options-list">
+    <div class="option-row" onclick="selectOption(this, '3 Mini Box')">
+      <div class="option-radio"></div>
+      <span class="option-label">3 Mini Box</span>
+    </div>
+    <div class="option-row" onclick="selectOption(this, '2 Mini Box')">
+      <div class="option-radio"></div>
+      <span class="option-label">2 Mini Box</span>
+    </div>
+    <div class="option-row" onclick="selectOption(this, '1 Mini Box')">
+      <div class="option-radio"></div>
+      <span class="option-label">1 Mini Box</span>
+    </div>
+  </div>
+
+  <div class="section-label">Custom</div>
+  <div class="options-list">
+    <div class="option-row" onclick="selectOption(this, '1 Custom Box')">
+      <div class="option-radio"></div>
+      <span class="option-label">1 Custom Box</span>
+    </div>
+  </div>
+
+  <button class="next-btn" id="next-btn" onclick="goToA2()" disabled>Next</button>
+</div>
+
+<!-- A2: NAME THE BOX -->
+<div id="a2" class="page">
+  <div class="nav-bar">
+    <button class="back-btn" onclick="goTo('a1')">‹ Back</button>
+    <span class="nav-title">Name Your Box</span>
+    <span class="nav-spacer"></span>
+  </div>
+
+  <div class="name-section">
+    <div class="name-card">
+      <div class="name-label">Box Name</div>
+      <input class="name-input" id="box-name" type="text" placeholder="Enter a name…" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+  </div>
+
+  <div class="summary-section">
+    <div class="summary-card">
+      <div class="summary-title">Your Selection</div>
+      <div id="summary-list"></div>
+    </div>
+  </div>
+
+  <button class="confirm-btn" onclick="confirmOrder()">Confirm Order</button>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-overlay" id="success">
+  <div class="success-card">
+    <div class="success-icon">✓</div>
+    <div class="success-title">Order Placed!</div>
+    <div class="success-name" id="success-name"></div>
+    <button class="success-ok" onclick="resetAll()">Done</button>
+  </div>
+</div>
+
+<script>
+  let selected = null;
+
+  function goTo(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function selectOption(row, label) {
+    // Deselect all
+    document.querySelectorAll('.option-row').forEach(r => r.classList.remove('selected'));
+    // Select this one
+    row.classList.add('selected');
+    selected = label;
+    document.getElementById('next-btn').disabled = false;
+  }
+
+  function goToA2() {
+    const list = document.getElementById('summary-list');
+    list.innerHTML = `<div class="summary-item"><span class="summary-dot"></span>${selected}</div>`;
+    goTo('a2');
+    setTimeout(() => document.getElementById('box-name').focus(), 400);
+  }
+
+  function confirmOrder() {
+    const name = document.getElementById('box-name').value.trim() || 'Unnamed Box';
+    document.getElementById('success-name').textContent = '"' + name + '" — ' + selected;
+    document.getElementById('success').classList.add('show');
+  }
+
+  function resetAll() {
+    selected = null;
+    document.querySelectorAll('.option-row').forEach(r => r.classList.remove('selected'));
+    document.getElementById('next-btn').disabled = true;
+    document.getElementById('box-name').value = '';
+    document.getElementById('success').classList.remove('show');
+    goTo('main');
+  }
+</script>
+</body>
+</html>
