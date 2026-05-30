@@ -146,7 +146,6 @@
   .option-row:last-child { border-bottom: none; }
   .option-row:active { background: #2c2c2e; }
 
-  /* Radio button style */
   .option-radio {
     width: 26px;
     height: 26px;
@@ -270,6 +269,14 @@
     flex-shrink: 0;
   }
 
+  /* Dims detail row */
+  .summary-dims {
+    font-size: 15px;
+    color: #636366;
+    padding: 4px 0 8px 17px;
+    border-bottom: 0.5px solid #2c2c2e;
+  }
+
   .confirm-btn {
     margin: 0 16px 48px;
     width: calc(100% - 32px);
@@ -344,15 +351,19 @@
 <!-- MAIN PAGE -->
 <div id="main" class="page active">
   <div>
-    <div class="app-title">📦 Apple Box</div>
+    <div class="app-title">📦 Reflect Dashboard</div>
     <div class="app-subtitle">What would you like to do?</div>
   </div>
   <button class="main-btn primary" onclick="goTo('a1')">
     Apple Box
     <span class="btn-arrow">›</span>
   </button>
-  <button class="main-btn secondary" onclick="alert('Orders coming soon!')">
-    Orders
+  <button class="main-btn primary" onclick="alert('Hamarosan!')">
+    Finished Jobs
+    <span class="btn-arrow">›</span>
+  </button>
+   <button class="main-btn primary" onclick="goTo('a3')">
+    To Order
     <span class="btn-arrow">›</span>
   </button>
 </div>
@@ -367,15 +378,15 @@
 
   <div class="section-label">Photoma Box</div>
   <div class="options-list">
-    <div class="option-row" onclick="selectOption(this, '3 Photoma Box')">
+    <div class="option-row" onclick="selectOption(this, 'photoma-3')">
       <div class="option-radio"></div>
       <span class="option-label">3 Photoma Box</span>
     </div>
-    <div class="option-row" onclick="selectOption(this, '2 Photoma Box')">
+    <div class="option-row" onclick="selectOption(this, 'photoma-2')">
       <div class="option-radio"></div>
       <span class="option-label">2 Photoma Box</span>
     </div>
-    <div class="option-row" onclick="selectOption(this, '1 Photoma Box')">
+    <div class="option-row" onclick="selectOption(this, 'photoma-1')">
       <div class="option-radio"></div>
       <span class="option-label">1 Photoma Box</span>
     </div>
@@ -383,15 +394,15 @@
 
   <div class="section-label">Mini Box</div>
   <div class="options-list">
-    <div class="option-row" onclick="selectOption(this, '3 Mini Box')">
+    <div class="option-row" onclick="selectOption(this, 'mini-3')">
       <div class="option-radio"></div>
       <span class="option-label">3 Mini Box</span>
     </div>
-    <div class="option-row" onclick="selectOption(this, '2 Mini Box')">
+    <div class="option-row" onclick="selectOption(this, 'mini-2')">
       <div class="option-radio"></div>
       <span class="option-label">2 Mini Box</span>
     </div>
-    <div class="option-row" onclick="selectOption(this, '1 Mini Box')">
+    <div class="option-row" onclick="selectOption(this, 'mini-1')">
       <div class="option-radio"></div>
       <span class="option-label">1 Mini Box</span>
     </div>
@@ -399,7 +410,7 @@
 
   <div class="section-label">Custom</div>
   <div class="options-list">
-    <div class="option-row" onclick="selectOption(this, '1 Custom Box')">
+    <div class="option-row" onclick="selectOption(this, 'custom-1')">
       <div class="option-radio"></div>
       <span class="option-label">1 Custom Box</span>
     </div>
@@ -430,7 +441,7 @@
     </div>
   </div>
 
-  <button class="confirm-btn" onclick="confirmOrder()">Confirm Order</button>
+  <button class="confirm-btn" onclick="confirmOrder()">Next</button>
 </div>
 
 <!-- SUCCESS -->
@@ -444,38 +455,80 @@
 </div>
 
 <script>
-  let selected = null;
+  // ─── BOX DATABASE ───────────────────────────────────────────────
+  // Edit these values to update dimensions and weights at any time.
+  // length/width/height are in inches; weight is in lbs.
 
+  const BOX_DATA = {
+    'photoma-3': { label: '3 Photoma Box', length: 32, width: 7,  height: 7,  weight: 29   },
+    'photoma-2': { label: '2 Photoma Box', length: 32, width: 6,  height: 6,  weight: 20   },
+    'photoma-1': { label: '1 Photoma Box', length: 32, width: 5,  height: 5,  weight: 11   },
+    'mini-3':    { label: '3 Mini Box',    length: 38, width: 6,  height: 6,  weight: 15   },
+    'mini-2':    { label: '2 Mini Box',    length: 38, width: 5,  height: 5,  weight: 10   },
+    'mini-1':    { label: '1 Mini Box',    length: 38,  width: 5,  height: 5,  weight: 6    },
+    'custom-1':  { label: '1 Custom Box',  length: null, width: null, height: null, weight: null }
+  };
+
+  // ─── STATE ─────────────────────────────────────────────────────
+  let selectedId = null;
+
+  // ─── NAVIGATION ────────────────────────────────────────────────
   function goTo(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
     window.scrollTo(0, 0);
   }
 
-  function selectOption(row, label) {
-    // Deselect all
+  // ─── BOX SELECTION ─────────────────────────────────────────────
+  function selectOption(row, boxId) {
     document.querySelectorAll('.option-row').forEach(r => r.classList.remove('selected'));
-    // Select this one
     row.classList.add('selected');
-    selected = label;
+    selectedId = boxId;
     document.getElementById('next-btn').disabled = false;
   }
 
+  // ─── GO TO SUMMARY PAGE ────────────────────────────────────────
   function goToA2() {
+    const box = BOX_DATA[selectedId];
     const list = document.getElementById('summary-list');
-    list.innerHTML = `<div class="summary-item"><span class="summary-dot"></span>${selected}</div>`;
+
+    if (box.length !== null) {
+      // Show box name + dimensions + weight
+      list.innerHTML = `
+        <div class="summary-item">
+          <span class="summary-dot"></span>
+          ${box.label}
+        </div>
+        <div class="summary-dims">
+          ${box.length}"L &times; ${box.width}"W &times; ${box.height}"H &nbsp;&bull;&nbsp; ${box.weight} lbs
+        </div>
+      `;
+    } else {
+      // Custom box — no preset dimensions
+      list.innerHTML = `
+        <div class="summary-item">
+          <span class="summary-dot"></span>
+          ${box.label}
+        </div>
+        <div class="summary-dims">Custom dimensions — contact us for details</div>
+      `;
+    }
+
     goTo('a2');
     setTimeout(() => document.getElementById('box-name').focus(), 400);
   }
 
+  // ─── CONFIRM ORDER ─────────────────────────────────────────────
   function confirmOrder() {
+    const box = BOX_DATA[selectedId];
     const name = document.getElementById('box-name').value.trim() || 'Unnamed Box';
-    document.getElementById('success-name').textContent = '"' + name + '" — ' + selected;
+    document.getElementById('success-name').textContent = '"' + name + '" — ' + box.label;
     document.getElementById('success').classList.add('show');
   }
 
+  // ─── RESET ─────────────────────────────────────────────────────
   function resetAll() {
-    selected = null;
+    selectedId = null;
     document.querySelectorAll('.option-row').forEach(r => r.classList.remove('selected'));
     document.getElementById('next-btn').disabled = true;
     document.getElementById('box-name').value = '';
