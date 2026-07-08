@@ -92,7 +92,7 @@
   #review { background: #000; }
   .review-hero { padding: 36px 24px 28px; text-align: center; border-bottom: 0.5px solid #2c2c2e; }
   .review-date { font-size: 30px; font-weight: 700; color: #636366; letter-spacing: -0.3px; margin-bottom: 4px; }
-  .review-box-name { font-size: 30px; font-weight: 700; color: #f2f2f7; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .review-box-name { font-size: 30px; font-weight: 700; color: #f2f2f7; letter-spacing: -0.3px; }
   .review-box-type { font-size: 16px; color: #48484a; margin-top: 6px; }
   .review-section { padding: 0 16px; margin-top: 28px; }
   .review-section-title { font-size: 13px; font-weight: 600; color: #636366; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; padding-left: 4px; }
@@ -606,7 +606,8 @@
     allBoxes = [];
     try {
       await store.del(STORAGE_KEY);
-    } catch (e) { /* nothing to delete is fine */ }n    renderSaved();
+    } catch (e) { /* nothing to delete is fine */ }
+    renderSaved();
   }
 
   // ── MARKDOWN EXPORT ───────────────────────────────────────────
