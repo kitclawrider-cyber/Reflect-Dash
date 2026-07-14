@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Reflect Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif; background: #000; min-height: 100vh; color: #f2f2f7; }
+  .page { display: none; min-height: 100vh; flex-direction: column; }
+  .page.active { display: flex; }
+
+  #main { align-items: center; justify-content: center; gap: 22px; padding: 40px 28px; background: #000; }
+  .app-title { font-size: 38px; font-weight: 700; letter-spacing: -0.5px; color: #f2f2f7; margin-bottom: 10px; text-align: center; }
+  .app-subtitle { font-size: 18px; color: #636366; margin-bottom: 36px; text-align: center; }
+  .main-btn { width: 100%; max-width: 340px; padding: 22px 26px; border-radius: 16px; border: none; font-size: 20px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: transform 0.1s, opacity 0.1s; font-family: inherit; }
+  .main-btn:active { transform: scale(0.97); opacity: 0.8; }
+  .main-btn.primary { background: #f2f2f7; color: #000; }
+  .btn-arrow { font-size: 22px; opacity: 0.4; }
+
+  .nav-bar { background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); padding: 18px 20px 14px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; border-bottom: 0.5px solid #2c2c2e; }
+  .back-btn { background: none; border: none; font-size: 19px; color: #0a84ff; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 0; font-family: inherit; }
+  .nav-title { font-size: 19px; font-weight: 600; flex: 1; text-align: center; color: #f2f2f7; }
+  .nav-spacer { width: 60px; }
+
+  #a1 { background: #000; }
+  .section-label { font-size: 14px; font-weight: 500; color: #636366; text-transform: uppercase; letter-spacing: 0.5px; padding: 22px 20px 8px; }
+  .options-list { background: #1c1c1e; margin: 0 16px; border-radius: 12px; overflow: hidden; }
+  .option-row { display: flex; align-items: center; padding: 17px 16px; border-bottom: 0.5px solid #2c2c2e; cursor: pointer; transition: background 0.1s; user-select: none; }
+  .option-row:last-child { border-bottom: none; }
+  .option-row:active { background: #2c2c2e; }
+  .option-radio { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #48484a; margin-right: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; background: transparent; }
+  .option-row.selected .option-radio { border-color: #0a84ff; }
+  .option-row.selected .option-radio::after { content: ''; width: 12px; height: 12px; border-radius: 50%; background: #0a84ff; display: block; }
+  .option-label { font-size: 19px; color: #f2f2f7; }
+
+  .next-btn { margin: 28px 16px; width: calc(100% - 32px); padding: 18px; background: #0a84ff; color: #fff; border: none; border-radius: 14px; font-size: 19px; font-weight: 600; cursor: pointer; transition: opacity 0.1s, transform 0.1s; font-family: inherit; }
+  .next-btn:disabled { background: #2c2c2e; color: #48484a; cursor: default; }
+  .next-btn:not(:disabled):active { transform: scale(0.98); opacity: 0.8; }
+
+  .custom-dims-panel { display: none; margin: 0 16px; background: #1c1c1e; border-radius: 12px; padding: 18px 16px; }
+  .custom-dims-panel.visible { display: block; }
+  .dims-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 16px; }
+  .dim-field { display: flex; flex-direction: column; gap: 6px; }
+  .dim-label { font-size: 13px; color: #636366; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
+  .dim-input-wrap { display: flex; align-items: center; border-bottom: 1px solid #3a3a3c; padding-bottom: 4px; }
+  .dim-input { flex: 1; border: none; outline: none; font-size: 20px; font-weight: 500; color: #f2f2f7; font-family: inherit; background: transparent; caret-color: #0a84ff; width: 100%; }
+  .dim-input::placeholder { color: #48484a; }
+  .dim-unit { font-size: 14px; color: #48484a; flex-shrink: 0; padding-left: 4px; }
+
+  #a2 { background: #000; }
+  .name-section { padding: 24px 16px; }
+  .name-card { background: #1c1c1e; border-radius: 12px; padding: 20px; }
+  .name-label { font-size: 14px; color: #636366; margin-bottom: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
+  .name-input { width: 100%; border: none; outline: none; font-size: 24px; font-weight: 500; color: #f2f2f7; font-family: inherit; background: transparent; caret-color: #0a84ff; }
+  .name-input::placeholder { color: #48484a; }
+  .summary-section { padding: 0 16px 24px; }
+  .summary-card { background: #1c1c1e; border-radius: 12px; padding: 18px 20px; }
+  .summary-title { font-size: 14px; color: #636366; margin-bottom: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
+  .summary-item { font-size: 17px; color: #f2f2f7; padding: 7px 0; border-bottom: 0.5px solid #2c2c2e; display: flex; align-items: center; gap: 10px; }
+  .summary-item:last-child { border-bottom: none; }
+  .summary-dot { width: 7px; height: 7px; border-radius: 50%; background: #0a84ff; flex-shrink: 0; }
+  .summary-dims { font-size: 15px; color: #636366; padding: 4px 0 8px 17px; border-bottom: 0.5px solid #2c2c2e; }
+  .summary-dims:last-child { border-bottom: none; }
+
+  #a2b { background: #000; }
+  .contents-section { padding: 20px 16px 8px; }
+  .add-item-card { background: #1c1c1e; border-radius: 12px; padding: 16px; display: flex; gap: 10px; align-items: flex-end; }
+  .add-item-card .field { flex: 1; }
+  .field-label { font-size: 13px; color: #636366; margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
+  .content-input { width: 100%; border: none; outline: none; font-size: 17px; font-weight: 500; color: #f2f2f7; font-family: inherit; background: transparent; caret-color: #0a84ff; padding: 2px 0; border-bottom: 1px solid #3a3a3c; }
+  .content-input::placeholder { color: #48484a; }
+  .qty-input { width: 100%; border: none; outline: none; font-size: 17px; font-weight: 500; color: #f2f2f7; font-family: inherit; background: transparent; caret-color: #0a84ff; padding: 2px 0; border-bottom: 1px solid #3a3a3c; text-align: center; }
+  .qty-input::placeholder { color: #48484a; }
+  .add-btn { background: #0a84ff; border: none; border-radius: 10px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 24px; color: #fff; font-family: inherit; transition: opacity 0.1s; }
+  .add-btn:active { opacity: 0.7; }
+  .items-list-section { padding: 16px 16px 8px; }
+  .items-list { background: #1c1c1e; border-radius: 12px; overflow: hidden; }
+  .item-row { display: flex; align-items: center; padding: 14px 16px; border-bottom: 0.5px solid #2c2c2e; gap: 12px; }
+  .item-row:last-child { border-bottom: none; }
+  .item-qty-badge { background: #2c2c2e; border-radius: 8px; padding: 4px 10px; font-size: 15px; font-weight: 600; color: #f2f2f7; min-width: 36px; text-align: center; flex-shrink: 0; }
+  .item-name { font-size: 17px; color: #f2f2f7; flex: 1; }
+  .item-delete { background: none; border: none; color: #ff453a; font-size: 22px; cursor: pointer; padding: 0 4px; font-family: inherit; line-height: 1; }
+  .empty-state { padding: 28px 16px; text-align: center; font-size: 16px; color: #48484a; }
+  .notes-section { padding: 8px 16px 0; }
+  .notes-card { background: #1c1c1e; border-radius: 12px; padding: 16px 20px; }
+  .notes-input { width: 100%; border: none; outline: none; font-size: 16px; color: #f2f2f7; font-family: inherit; background: transparent; caret-color: #0a84ff; resize: none; min-height: 72px; line-height: 1.5; }
+  .notes-input::placeholder { color: #48484a; }
+  .confirm-btn { margin: 28px 16px 48px; width: calc(100% - 32px); padding: 18px; background: #30d158; color: #fff; border: none; border-radius: 14px; font-size: 19px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.1s, transform 0.1s; }
+  .confirm-btn:active { transform: scale(0.98); opacity: 0.8; }
+
+  #review { background: #000; }
+  .review-hero { padding: 36px 24px 28px; text-align: center; border-bottom: 0.5px solid #2c2c2e; }
+  .review-date { font-size: 30px; font-weight: 700; color: #636366; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .review-box-name { font-size: 30px; font-weight: 700; color: #f2f2f7; letter-spacing: -0.3px; }
+  .review-box-type { font-size: 16px; color: #48484a; margin-top: 6px; }
+  .review-section { padding: 0 16px; margin-top: 28px; }
+  .review-section-title { font-size: 13px; font-weight: 600; color: #636366; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; padding-left: 4px; }
+  .review-card { background: #1c1c1e; border-radius: 14px; overflow: hidden; }
+  .review-dims-text { padding: 16px; font-size: 17px; color: #f2f2f7; line-height: 1.6; }
+  .review-item-row { display: flex; align-items: center; padding: 13px 16px; border-bottom: 0.5px solid #2c2c2e; gap: 12px; }
+  .review-item-row:last-child { border-bottom: none; }
+  .review-item-badge { background: #2c2c2e; border-radius: 8px; padding: 4px 10px; font-size: 14px; font-weight: 600; color: #f2f2f7; min-width: 34px; text-align: center; flex-shrink: 0; }
+  .review-item-name { font-size: 16px; color: #f2f2f7; flex: 1; }
+  .review-empty { padding: 16px; font-size: 15px; color: #48484a; }
+  .review-notes-text { padding: 14px 16px; font-size: 16px; color: #f2f2f7; line-height: 1.55; }
+  .review-notes-empty { padding: 14px 16px; font-size: 15px; color: #48484a; }
+
+  .add-box-btn { margin: 32px 16px 16px; width: calc(100% - 32px); padding: 18px; background: #0a84ff; color: #fff; border: none; border-radius: 14px; font-size: 19px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.1s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .add-box-btn:disabled { background: #2c2c2e; color: #48484a; cursor: default; }
+  .add-box-btn:not(:disabled):active { transform: scale(0.98); opacity: 0.8; }
+
+  /* Saved boxes viewer */
+  .saved-toolbar { display: flex; gap: 10px; margin: 0 16px 40px; }
+  .toolbar-btn { flex: 1; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.1s, transform 0.1s; }
+  .toolbar-btn:active { transform: scale(0.98); opacity: 0.8; }
+  .toolbar-btn.secondary { background: #1c1c1e; color: #0a84ff; }
+  .toolbar-btn.danger { background: #1c1c1e; color: #ff453a; }
+
+  #saved { background: #000; }
+  .saved-count-label { font-size: 14px; color: #636366; padding: 20px 20px 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .saved-list { padding: 8px 16px 0; }
+  .saved-box-card { background: #1c1c1e; border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; }
+  .saved-box-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .saved-box-name { font-size: 19px; font-weight: 700; color: #f2f2f7; }
+  .saved-box-date { font-size: 13px; color: #636366; flex-shrink: 0; padding-top: 3px; }
+  .saved-box-type { font-size: 14px; color: #48484a; margin-top: 2px; }
+  .saved-box-dims { font-size: 14px; color: #8e8e93; margin-top: 8px; }
+  .saved-box-items { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+  .saved-box-item { font-size: 14px; color: #c7c7cc; }
+  .saved-box-notes { font-size: 13px; color: #8e8e93; margin-top: 10px; font-style: italic; line-height: 1.45; }
+  .saved-box-del { background: none; border: none; color: #ff453a; font-size: 14px; cursor: pointer; font-family: inherit; padding: 8px 0 0; }
+  .saved-empty { padding: 60px 24px; text-align: center; font-size: 16px; color: #48484a; }
+
+  .spinner { width: 20px; height: 20px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .success-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+  .success-overlay.show { display: flex; }
+  .success-card { background: #1c1c1e; border-radius: 20px; padding: 36px 28px; text-align: center; width: 100%; max-width: 340px; border: 1px solid #2c2c2e; }
+  .success-icon { width: 70px; height: 70px; background: #30d158; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; font-size: 30px; }
+  .success-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #f2f2f7; }
+  .success-sub { font-size: 16px; color: #636366; margin-bottom: 4px; }
+  .success-count { font-size: 14px; color: #48484a; margin-bottom: 28px; }
+  .success-ok { width: 100%; padding: 16px; background: #0a84ff; color: #fff; border: none; border-radius: 12px; font-size: 19px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 10px; }
+  .success-secondary { width: 100%; padding: 15px; background: transparent; color: #636366; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+  .err-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+  .err-overlay.show { display: flex; }
+  .err-card { background: #1c1c1e; border-radius: 20px; padding: 32px 24px; text-align: center; width: 100%; max-width: 340px; border: 1px solid #3a3a3c; }
+  .err-icon { font-size: 40px; margin-bottom: 14px; }
+  .err-title { font-size: 20px; font-weight: 700; color: #ff453a; margin-bottom: 8px; }
+  .err-msg { font-size: 15px; color: #636366; margin-bottom: 24px; line-height: 1.5; }
+  .err-ok { width: 100%; padding: 14px; background: #2c2c2e; color: #f2f2f7; border: none; border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer; font-family: inherit; }
+</style>
+</head>
+<body>
+
+<!-- MAIN -->
+<div id="main" class="page active">
+  <div>
+    <div class="app-title">📦 Reflect Dashboard</div>
+    <div class="app-subtitle">What would you like to do?</div>
+  </div>
+  <button class="main-btn primary" onclick="goTo('a1')">Apple Box <span class="btn-arrow">›</span></button>
+  <button class="main-btn primary" onclick="alert('Hamarosan!')">Finished Jobs <span class="btn-arrow">›</span></button>
+  <button class="main-btn primary" onclick="goTo('a3')">To Order <span class="btn-arrow">›</span></button>
+  <button class="main-btn primary" onclick="openSaved()">Saved Boxes <span class="btn-arrow">›</span></button>
+</div>
+
+<!-- A1 -->
+<div id="a1" class="page">
+  <div class="nav-bar">
+    <button class="back-btn" onclick="goTo('main')">‹ Back</button>
+    <span class="nav-title">Choose Box</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="section-label">Photoma Box</div>
+  <div class="options-list">
+    <div class="option-row" onclick="selectOption(this,'photoma-3')"><div class="option-radio"></div><span class="option-label">3 Photoma Box</span></div>
+    <div class="option-row" onclick="selectOption(this,'photoma-2')"><div class="option-radio"></div><span class="option-label">2 Photoma Box</span></div>
+    <div class="option-row" onclick="selectOption(this,'photoma-1')"><div class="option-radio"></div><span class="option-label">1 Photoma Box</span></div>
+  </div>
+  <div class="section-label">Mini Box</div>
+  <div class="options-list">
+    <div class="option-row" onclick="selectOption(this,'mini-3')"><div class="option-radio"></div><span class="option-label">3 Mini Box</span></div>
+    <div class="option-row" onclick="selectOption(this,'mini-2')"><div class="option-radio"></div><span class="option-label">2 Mini Box</span></div>
+    <div class="option-row" onclick="selectOption(this,'mini-1')"><div class="option-radio"></div><span class="option-label">1 Mini Box</span></div>
+  </div>
+  <div class="section-label">Custom</div>
+  <div class="options-list">
+    <div class="option-row" onclick="selectOption(this,'custom-1')"><div class="option-radio"></div><span class="option-label">1 Custom Box</span></div>
+  </div>
+  <div class="section-label" id="custom-dims-label" style="display:none">Custom Dimensions</div>
+  <div class="custom-dims-panel" id="custom-dims-panel">
+    <div class="dims-grid">
+      <div class="dim-field"><div class="dim-label">Length</div><div class="dim-input-wrap"><input class="dim-input" id="dim-length" type="number" min="0" placeholder="0" oninput="updateA1Next()"><span class="dim-unit">in</span></div></div>
+      <div class="dim-field"><div class="dim-label">Width</div><div class="dim-input-wrap"><input class="dim-input" id="dim-width" type="number" min="0" placeholder="0" oninput="updateA1Next()"><span class="dim-unit">in</span></div></div>
+      <div class="dim-field"><div class="dim-label">Height</div><div class="dim-input-wrap"><input class="dim-input" id="dim-height" type="number" min="0" placeholder="0" oninput="updateA1Next()"><span class="dim-unit">in</span></div></div>
+      <div class="dim-field"><div class="dim-label">Weight</div><div class="dim-input-wrap"><input class="dim-input" id="dim-weight" type="number" min="0" placeholder="0" oninput="updateA1Next()"><span class="dim-unit">lbs</span></div></div>
+    </div>
+  </div>
+  <button class="next-btn" id="a1-next-btn" onclick="goToA2()" disabled>Next</button>
+</div>
+
+<!-- A2 -->
+<div id="a2" class="page">
+  <div class="nav-bar">
+    <button class="back-btn" onclick="goTo('a1')">‹ Back</button>
+    <span class="nav-title">Name Your Box</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="name-section">
+    <div class="name-card">
+      <div class="name-label">Box Name</div>
+      <input class="name-input" id="box-name" type="text" placeholder="Enter a name…" autocomplete="off" autocorrect="off" spellcheck="false" oninput="updateA2Next()">
+    </div>
+  </div>
+  <div class="summary-section">
+    <div class="summary-card">
+      <div class="summary-title">Your Selection</div>
+      <div id="summary-list"></div>
+    </div>
+  </div>
+  <button class="next-btn" id="a2-next-btn" onclick="goToA2b()" disabled>Next</button>
+</div>
+
+<!-- A2b -->
+<div id="a2b" class="page">
+  <div class="nav-bar">
+    <button class="back-btn" onclick="goTo('a2')">‹ Back</button>
+    <span class="nav-title">Box Contents</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="contents-section">
+    <div class="add-item-card">
+      <div class="field" style="flex:0 0 56px">
+        <div class="field-label">Qty</div>
+        <input class="qty-input" id="item-qty" type="number" min="1" placeholder="1" onkeydown="if(event.key==='Enter')addItem()">
+      </div>
+      <div class="field" style="flex:2">
+        <div class="field-label">Item</div>
+        <input class="content-input" id="item-name" type="text" placeholder="e.g. Photoma prints" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')addItem()">
+      </div>
+      <button class="add-btn" onclick="addItem()">+</button>
+    </div>
+  </div>
+  <div class="items-list-section">
+    <div id="items-container"><div class="empty-state">No items added yet</div></div>
+  </div>
+  <div class="notes-section">
+    <div class="section-label" style="padding: 0 0 8px;">Notes</div>
+    <div class="notes-card">
+      <textarea class="notes-input" id="box-notes" placeholder="Any special instructions or notes…"></textarea>
+    </div>
+  </div>
+  <button class="confirm-btn" onclick="goToReview()">Review Box Details</button>
+</div>
+
+<!-- REVIEW -->
+<div id="review" class="page">
+  <div class="nav-bar">
+    <button class="back-btn" onclick="goTo('a2b')">‹ Back</button>
+    <span class="nav-title">Box Details</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="review-hero">
+    <div class="review-date" id="review-date"></div>
+    <div class="review-box-name" id="review-box-name"></div>
+    <div class="review-box-type" id="review-box-type"></div>
+  </div>
+  <div class="review-section">
+    <div class="review-section-title">Dimensions</div>
+    <div class="review-card"><div class="review-dims-text" id="review-dims-text"></div></div>
+  </div>
+  <div class="review-section">
+    <div class="review-section-title">Contents</div>
+    <div class="review-card" id="review-contents"></div>
+  </div>
+  <div class="review-section">
+    <div class="review-section-title">Notes</div>
+    <div class="review-card" id="review-notes"></div>
+  </div>
+  <button class="add-box-btn" id="add-box-btn" onclick="addBox()">Add Box</button>
+</div>
+
+<!-- SAVED BOXES -->
+<div id="saved" class="page">
+  <div class="nav-bar">
+    <button class="back-btn" onclick="goTo('main')">‹ Back</button>
+    <span class="nav-title">Saved Boxes</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <div class="saved-count-label" id="saved-count-label"></div>
+  <div class="saved-list" id="saved-list"></div>
+  <div class="saved-toolbar" id="saved-toolbar" style="display:none">
+    <button class="toolbar-btn secondary" onclick="exportMarkdown()">Export .md</button>
+    <button class="toolbar-btn danger" onclick="clearAllSaved()">Clear All</button>
+  </div>
+</div>
+
+<!-- A3 -->
+<div id="a3" class="page">
+  <div class="nav-bar">
+    <button class="back-btn" onclick="goTo('main')">‹ Back</button>
+    <span class="nav-title">Order Sheet</span>
+    <span class="nav-spacer"></span>
+  </div>
+  <button class="confirm-btn" onclick="alert('Hamarosan!')">Add</button>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-overlay" id="success">
+  <div class="success-card">
+    <div class="success-icon">✓</div>
+    <div class="success-title">Box Saved!</div>
+    <div class="success-sub" id="success-sub"></div>
+    <div class="success-count" id="success-count"></div>
+    <button class="success-ok" onclick="resetAll()">Add Another Box</button>
+    <button class="success-secondary" onclick="resetAll(); openSaved();">View Saved Boxes</button>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="err-overlay" id="err-overlay">
+  <div class="err-card">
+    <div class="err-icon">⚠️</div>
+    <div class="err-title">Couldn't Save</div>
+    <div class="err-msg" id="err-msg"></div>
+    <button class="err-ok" onclick="document.getElementById('err-overlay').classList.remove('show')">OK</button>
+  </div>
+</div>
+
+<script>
+  // ── GOOGLE SHEET SYNC CONFIG ──────────────────────────────────
+  // Paste the /exec URL you get from Deploy → New deployment → Web app.
+  const SHEET_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzqxUGrSKXjKrDtzdUKh9170hpBoRHod_m1yZ2RF2364-PvCsbFL6gP25P4by9z1gfMPg/exec';
+  // Must match the SECRET constant inside the Apps Script.
+  const SHEET_SECRET   = 'kutyafasza4518';
+
+  // Key used for persistent storage (survives across sessions).
+  const STORAGE_KEY = 'reflect-saved-boxes';
+
+  // Storage abstraction:
+  //  • Inside Claude's artifact viewer → use the injected window.storage API.
+  //  • Running standalone (file opened directly / hosted) → fall back to the
+  //    browser's own localStorage, which also persists across sessions.
+  const store = (typeof window !== 'undefined' && window.storage && typeof window.storage.set === 'function')
+    ? {
+        mode: 'window.storage',
+        async get(k) { try { const r = await window.storage.get(k); return r ? r.value : null; } catch (e) { return null; } },
+        async set(k, v) { const r = await window.storage.set(k, v); if (!r) throw new Error('Storage did not confirm the save.'); },
+        async del(k) { try { await window.storage.delete(k); } catch (e) {} }
+      }
+    : {
+        mode: 'localStorage',
+        async get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+        async set(k, v) { localStorage.setItem(k, v); },
+        async del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+      };
+
+  const BOX_DATA = {
+    'photoma-3': { label: '3 Photoma Box', length: 32, width: 7,  height: 7,  weight: 29 },
+    'photoma-2': { label: '2 Photoma Box', length: 32, width: 6,  height: 6,  weight: 20 },
+    'photoma-1': { label: '1 Photoma Box', length: 32, width: 5,  height: 5,  weight: 11 },
+    'mini-3':    { label: '3 Mini Box',    length: 38, width: 6,  height: 6,  weight: 15 },
+    'mini-2':    { label: '2 Mini Box',    length: 38, width: 5,  height: 5,  weight: 10 },
+    'mini-1':    { label: '1 Mini Box',    length: 38, width: 5,  height: 5,  weight: 6  },
+    'custom-1':  { label: '1 Custom Box',  length: null, width: null, height: null, weight: null }
+  };
+
+  let selectedId = null;
+  let items = [];
+  let allBoxes = [];   // in-memory mirror of what's in persistent storage
+
+  // ── PERSISTENT STORAGE HELPERS ────────────────────────────────
+  async function loadBoxes() {
+    try {
+      const raw = await store.get(STORAGE_KEY);
+      allBoxes = raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      // Key doesn't exist yet (first run) or read failed → start empty.
+      allBoxes = [];
+    }
+    return allBoxes;
+  }
+
+  async function saveBoxes() {
+    await store.set(STORAGE_KEY, JSON.stringify(allBoxes));
+  }
+
+  // Load anything previously saved as soon as the app opens.
+  loadBoxes();
+
+  function goTo(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function showError(msg) {
+    document.getElementById('err-msg').textContent = msg;
+    document.getElementById('err-overlay').classList.add('show');
+  }
+
+  function selectOption(row, boxId) {
+    document.querySelectorAll('.option-row').forEach(r => r.classList.remove('selected'));
+    row.classList.add('selected');
+    selectedId = boxId;
+    const panel = document.getElementById('custom-dims-panel');
+    const label = document.getElementById('custom-dims-label');
+    if (boxId === 'custom-1') {
+      panel.classList.add('visible'); label.style.display = 'block'; updateA1Next();
+    } else {
+      panel.classList.remove('visible'); label.style.display = 'none';
+      document.getElementById('a1-next-btn').disabled = false;
+    }
+  }
+
+  function updateA1Next() {
+    if (selectedId !== 'custom-1') return;
+    const l  = document.getElementById('dim-length').value.trim();
+    const w  = document.getElementById('dim-width').value.trim();
+    const h  = document.getElementById('dim-height').value.trim();
+    const wt = document.getElementById('dim-weight').value.trim();
+    document.getElementById('a1-next-btn').disabled = !(l && w && h && wt);
+  }
+
+  function updateA2Next() {
+    document.getElementById('a2-next-btn').disabled = document.getElementById('box-name').value.trim().length === 0;
+  }
+
+  function getDims() {
+    const box = BOX_DATA[selectedId];
+    if (selectedId === 'custom-1') {
+      return {
+        length: parseFloat(document.getElementById('dim-length').value),
+        width:  parseFloat(document.getElementById('dim-width').value),
+        height: parseFloat(document.getElementById('dim-height').value),
+        weight: parseFloat(document.getElementById('dim-weight').value),
+      };
+    }
+    return { length: box.length, width: box.width, height: box.height, weight: box.weight };
+  }
+
+  function goToA2() {
+    const box = BOX_DATA[selectedId];
+    const d = getDims();
+    document.getElementById('summary-list').innerHTML = `
+      <div class="summary-item"><span class="summary-dot"></span>${box.label}</div>
+      <div class="summary-dims">${d.length}"L × ${d.width}"W × ${d.height}"H · ${d.weight} lbs</div>`;
+    goTo('a2');
+    setTimeout(() => document.getElementById('box-name').focus(), 400);
+  }
+
+  function goToA2b() {
+    goTo('a2b');
+    setTimeout(() => document.getElementById('item-qty').focus(), 400);
+  }
+
+  function addItem() {
+    const nameEl = document.getElementById('item-name');
+    const qtyEl  = document.getElementById('item-qty');
+    const name = nameEl.value.trim();
+    const qty  = parseInt(qtyEl.value) || 1;
+    if (!name) { nameEl.focus(); return; }
+    items.push({ name, qty });
+    nameEl.value = ''; qtyEl.value = '';
+    renderItems(); qtyEl.focus();
+  }
+
+  function removeItem(idx) { items.splice(idx, 1); renderItems(); }
+
+  function renderItems() {
+    const container = document.getElementById('items-container');
+    if (items.length === 0) { container.innerHTML = '<div class="empty-state">No items added yet</div>'; return; }
+    container.innerHTML = '<div class="items-list">' + items.map((item, i) =>
+      `<div class="item-row"><span class="item-qty-badge">×${item.qty}</span><span class="item-name">${item.name}</span><button class="item-delete" onclick="removeItem(${i})">−</button></div>`
+    ).join('') + '</div>';
+  }
+
+  function goToReview() {
+    const box   = BOX_DATA[selectedId];
+    const name  = document.getElementById('box-name').value.trim() || 'Unnamed Box';
+    const notes = document.getElementById('box-notes').value.trim();
+    const d     = getDims();
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    document.getElementById('review-date').textContent     = dateStr;
+    document.getElementById('review-box-name').textContent = name;
+    document.getElementById('review-box-type').textContent = box.label;
+    document.getElementById('review-dims-text').textContent = `${d.length}" L  ×  ${d.width}" W  ×  ${d.height}" H  ·  ${d.weight} lbs`;
+
+    const contentsEl = document.getElementById('review-contents');
+    contentsEl.innerHTML = items.length === 0
+      ? '<div class="review-empty">No items listed</div>'
+      : items.map(item => `<div class="review-item-row"><span class="review-item-badge">×${item.qty}</span><span class="review-item-name">${item.name}</span></div>`).join('');
+
+    document.getElementById('review-notes').innerHTML = (notes)
+      ? `<div class="review-notes-text">${notes}</div>`
+      : `<div class="review-notes-empty">No notes added</div>`;
+
+    goTo('review');
+  }
+
+  // ── PUSH ONE BOX TO THE GOOGLE SHEET ──────────────────────────
+  async function sendToSheet(boxRecord) {
+    const res = await fetch(SHEET_ENDPOINT, {
+      method: 'POST',
+      // text/plain keeps the browser from sending a CORS preflight,
+      // which Apps Script web apps cannot answer.
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ secret: SHEET_SECRET, box: boxRecord })
+    });
+    const text = await res.text();
+    if (text.trim().startsWith('<')) {
+      // Google sent an HTML page (usually a sign-in page) instead of JSON.
+      throw new Error('The endpoint returned a web page instead of data. ' +
+        'In Apps Script, check the deployment is a Web app with access set to ' +
+        '"Anyone" (not "Anyone with Google account"), and that you are using ' +
+        'the /exec URL from the latest deployment.');
+    }
+    const data = JSON.parse(text);
+    if (!data.ok) throw new Error(data.error || 'The sheet rejected the row.');
+    return data;
+  }
+
+  // ── SAVE REVIEWED BOX: GOOGLE SHEET + LOCAL COPY ──────────────
+  async function addBox() {
+    const btn   = document.getElementById('add-box-btn');
+    const name  = document.getElementById('review-box-name').textContent;
+    const type  = document.getElementById('review-box-type').textContent;
+    const dims  = document.getElementById('review-dims-text').textContent.trim();
+    const notes = document.getElementById('box-notes').value.trim();
+    const date  = document.getElementById('review-date').textContent;
+    const d     = getDims();
+
+    const boxRecord = {
+      id: Date.now(),
+      date, name, type, dims,
+      length: d.length, width: d.width, height: d.height, weight: d.weight,
+      items: items.map(i => ({ name: i.name, qty: i.qty })),
+      notes,
+      savedAt: new Date().toISOString(),
+      syncedToSheet: false
+    };
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Adding to sheet…';
+
+    let sheetError = null;
+    try {
+      await sendToSheet(boxRecord);
+      boxRecord.syncedToSheet = true;
+    } catch (err) {
+      sheetError = (err && err.message) ? err.message : 'Could not reach the sheet.';
+    }
+
+    try {
+      // Always keep a local copy, even if the sheet write failed.
+      await loadBoxes();
+      allBoxes.push(boxRecord);
+      await saveBoxes();
+    } catch (err) {
+      // Local save failed too — that is worth surfacing loudly.
+      btn.disabled = false;
+      btn.innerHTML = 'Add Box';
+      showError('Could not store this box locally. ' +
+        (sheetError ? 'It also did not reach the sheet. Please try again.'
+                    : 'It did reach the Google Sheet, though.'));
+      return;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = 'Add Box';
+
+    if (sheetError) {
+      showError('Saved on this device, but it did not reach the Google Sheet: ' +
+        sheetError + ' Check your connection and re-add it, or export to Markdown.');
+      return;
+    }
+
+    const total = allBoxes.length;
+    const itemCount = items.reduce((sum, i) => sum + i.qty, 0);
+    document.getElementById('success-sub').textContent = `"${name}" added to Apple Boxes`;
+    document.getElementById('success-count').textContent =
+      `${itemCount > 0 ? itemCount + ' item' + (itemCount !== 1 ? 's' : '') + ' · ' : ''}${total} box${total !== 1 ? 'es' : ''} saved total`;
+
+    document.getElementById('success').classList.add('show');
+  }
+
+  // ── SAVED BOXES VIEWER ────────────────────────────────────────
+  async function openSaved() {
+    goTo('saved');
+    const listEl  = document.getElementById('saved-list');
+    const labelEl = document.getElementById('saved-count-label');
+    const barEl   = document.getElementById('saved-toolbar');
+    listEl.innerHTML = '<div class="saved-empty">Loading…</div>';
+
+    await loadBoxes();
+    renderSaved();
+  }
+
+  function renderSaved() {
+    const listEl  = document.getElementById('saved-list');
+    const labelEl = document.getElementById('saved-count-label');
+    const barEl   = document.getElementById('saved-toolbar');
+
+    if (allBoxes.length === 0) {
+      labelEl.textContent = '';
+      barEl.style.display = 'none';
+      listEl.innerHTML = '<div class="saved-empty">No boxes saved yet.<br>Add one from “Apple Box”.</div>';
+      return;
+    }
+
+    labelEl.textContent = `${allBoxes.length} box${allBoxes.length !== 1 ? 'es' : ''} saved`;
+    barEl.style.display = 'flex';
+
+    // newest first
+    const ordered = [...allBoxes].sort((a, b) => (b.id || 0) - (a.id || 0));
+    listEl.innerHTML = ordered.map(b => {
+      const itemsHtml = (b.items && b.items.length)
+        ? `<div class="saved-box-items">${b.items.map(it => `<div class="saved-box-item">×${it.qty}  ${escapeHtml(it.name)}</div>`).join('')}</div>`
+        : '';
+      const notesHtml = b.notes ? `<div class="saved-box-notes">${escapeHtml(b.notes)}</div>` : '';
+      return `<div class="saved-box-card">
+        <div class="saved-box-head">
+          <div>
+            <div class="saved-box-name">${escapeHtml(b.name)}</div>
+            <div class="saved-box-type">${escapeHtml(b.type || '')}</div>
+          </div>
+          <div class="saved-box-date">${escapeHtml(b.date || '')}</div>
+        </div>
+        <div class="saved-box-dims">${escapeHtml(b.dims || '')}</div>
+        ${itemsHtml}
+        ${notesHtml}
+        <button class="saved-box-del" onclick="deleteBox(${b.id})">Delete</button>
+      </div>`;
+    }).join('');
+  }
+
+  async function deleteBox(id) {
+    allBoxes = allBoxes.filter(b => b.id !== id);
+    try {
+      await saveBoxes();
+    } catch (e) {
+      showError('Could not update memory. Please try again.');
+      await loadBoxes();
+    }
+    renderSaved();
+  }
+
+  async function clearAllSaved() {
+    if (!confirm('Delete all saved boxes? This cannot be undone.')) return;
+    allBoxes = [];
+    try {
+      await store.del(STORAGE_KEY);
+    } catch (e) { /* nothing to delete is fine */ }
+    renderSaved();
+  }
+
+  // ── MARKDOWN EXPORT ───────────────────────────────────────────
+  function buildMarkdown() {
+    let md = `# Reflect Dashboard — Saved Boxes\n\n_Exported ${new Date().toLocaleString()}_\n\n`;
+    md += `Total boxes: ${allBoxes.length}\n\n`;
+    const ordered = [...allBoxes].sort((a, b) => (a.id || 0) - (b.id || 0));
+    ordered.forEach((b, idx) => {
+      md += `---\n\n## ${idx + 1}. ${b.name}\n\n`;
+      md += `- **Date:** ${b.date || ''}\n`;
+      md += `- **Type:** ${b.type || ''}\n`;
+      md += `- **Dimensions:** ${b.dims || ''}\n\n`;
+      md += `**Contents:**\n\n`;
+      if (b.items && b.items.length) {
+        b.items.forEach(it => { md += `- ${it.qty} × ${it.name}\n`; });
+      } else {
+        md += `- _No items listed_\n`;
+      }
+      md += `\n**Notes:**\n\n${b.notes ? b.notes : '_No notes_'}\n\n`;
+    });
+    return md;
+  }
+
+  function exportMarkdown() {
+    if (allBoxes.length === 0) { showError('There are no saved boxes to export yet.'); return; }
+    const md = buildMarkdown();
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `reflect-boxes-${stamp}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function resetAll() {
+    selectedId = null; items = [];
+    document.querySelectorAll('.option-row').forEach(r => r.classList.remove('selected'));
+    document.getElementById('a1-next-btn').disabled = true;
+    document.getElementById('a2-next-btn').disabled = true;
+    document.getElementById('box-name').value  = '';
+    document.getElementById('box-notes').value = '';
+    ['dim-length','dim-width','dim-height','dim-weight'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('custom-dims-panel').classList.remove('visible');
+    document.getElementById('custom-dims-label').style.display = 'none';
+    document.getElementById('items-container').innerHTML = '<div class="empty-state">No items added yet</div>';
+    document.getElementById('success').classList.remove('show');
+    goTo('main');
+  }
+</script>
+</body>
+</html>
